@@ -99,7 +99,8 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 ## License
 
 [MIT License](https://github.com/Viole403/expert-potato/blob/master/LICENSE)
-©️Viole403 2020
+
+©Viole403
 
 ## Legal
 
