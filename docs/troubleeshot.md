@@ -2,12 +2,34 @@
 
 <!-- GEN:toc -->
 - [Troubleshooting](#troubleshooting)
+  - [Chrome headless doesn't launch on Windows](#chrome-headless-doesnt-launch-on-windows)
+  - [Chrome headless doesn't launch on UNIX](#chrome-headless-doesnt-launch-on-unix)
   - [Running Puppeteer in the cloud](#running-puppeteer-in-the-cloud)
     - [Running Puppeteer on Google App Engine](#running-puppeteer-on-google-app-engine)
     - [Running Puppeteer on Google Cloud Functions](#running-puppeteer-on-google-cloud-functions)
     - [Running Puppeteer on AWS Lambda](#running-puppeteer-on-aws-lambda)
 <!-- GEN:stop -->
 
+
+## Chrome headless doesn't launch on Windows
+
+Some [chrome policies](https://support.google.com/chrome/a/answer/7532015) might enforce running Chrome/Chromium
+with certain extensions.
+
+Puppeteer passes `--disable-extensions` flag by default and will fail to launch when such policies are active.
+
+To work around this, try running without the flag:
+
+```js
+const browser = await puppeteer.launch({
+  ignoreDefaultArgs: ['--disable-extensions'],
+});
+```
+
+## Chrome headless doesn't launch on UNIX
+
+Make sure all the necessary dependencies are installed. You can run `ldd chrome | grep not` on a Linux
+machine to check which dependencies are missing. The common ones are provided below.
 
 <details>
 <summary>Debian (e.g. Ubuntu) Dependencies</summary>
@@ -56,6 +78,40 @@ wget
 xdg-utils
 ```
 </details>
+
+<details>
+<summary>CentOS Dependencies</summary>
+
+```
+alsa-lib.x86_64
+atk.x86_64
+cups-libs.x86_64
+gtk3.x86_64
+ipa-gothic-fonts
+libXcomposite.x86_64
+libXcursor.x86_64
+libXdamage.x86_64
+libXext.x86_64
+libXi.x86_64
+libXrandr.x86_64
+libXScrnSaver.x86_64
+libXtst.x86_64
+pango.x86_64
+xorg-x11-fonts-100dpi
+xorg-x11-fonts-75dpi
+xorg-x11-fonts-cyrillic
+xorg-x11-fonts-misc
+xorg-x11-fonts-Type1
+xorg-x11-utils
+```
+
+After installing dependencies you need to update nss library using this command
+
+```
+yum update nss -y
+```
+</details>
+
 
 ## Running Puppeteer in the cloud
 
