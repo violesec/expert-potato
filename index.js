@@ -6,8 +6,6 @@ const color = require("./lib/color")
 const {ytmp3, wallpaperanime, anime, corona, quotes} =  require('./lib/functions')
 const {tiktok, instagram, facebook, youtube, likee,twitter} = require('./lib/dl-video')
 const urlShortener = require('./lib/shortener')
-// const { twitter } = require('video-url-link')
-// const { youtube } = require('video-url-link')
 
 const serverOption = {
     headless: true,
@@ -19,6 +17,9 @@ const serverOption = {
     chromiumArgs: [
         '--no-sandbox',
         '--disable-setuid-sandbox'
+        //If Windows Chrome Headless not run
+        // '--disable-extensions'
+        
     ]
 }
 
