@@ -1,10 +1,12 @@
 const { create, decryptMedia } = require('@open-wa/wa-automate')
 const moment = require('moment')
 const { video } = require('tiktok-scraper')
+const malScraper = require('mal-scraper')
 const color = require("./lib/color")
 const {ytmp3, wallpaperanime, anime, corona, quotes} =  require('./lib/functions')
-const {tiktok, instagram, twitter, facebook, youtube, likee} = require('./lib/dl-video')
+const {tiktok, instagram, facebook, youtube, likee,twitter} = require('./lib/dl-video')
 const urlShortener = require('./lib/shortener')
+// const { twitter } = require('video-url-link')
 // const { youtube } = require('video-url-link')
 
 const serverOption = {
@@ -24,9 +26,9 @@ const opsys = process.platform;
 if (opsys === "win32" || opsys === "win64") {
     serverOption['executablePath'] = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
 } else if (opsys === "linux") {
-    serverOption['browserRevision'] = '737027';
+    // serverOption['browserRevision'] = '737027';
     // serverOption['browserRevision'] = '/usr/bin/chrome'
-    // serverOption['executablePath'] = '/usr/bin/google-chrome';
+    serverOption['executablePath'] = '/usr/bin/google-chrome';
 } else if (opsys === "darwin") {
     serverOption['executablePath'] = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 }
@@ -55,7 +57,7 @@ async function msgHandler (client, message) {
         const time = moment(t * 1000).format('DD/MM HH:mm:ss')
         const commands = ['#menu', '#help', '#sticker', '#stiker', '#gifsticker', '#giftstiker','#tiktok',
         '#ig','#instagram','#twt','#twitter', '#halo', '#about', '#cek','#ping', '#fb','#facebook','#yt',
-        '#youtube','#ytmp3','#waifu','#Waifu','#kucing','#neko','#Pokemon','#pokemon','#wallpaper',
+        '#youtube','#ytmp3','#waifu','#Waifu','#kucing','#neko','#wallpaper',
         '#wallpaperanime','#corona','#nhder','#anime','#quote','#likee','#like']
         const cmds = commands.map(x => x + '\\b').join('|')
         const cmd = type === 'chat' ? body.match(new RegExp(cmds, 'gi')) : type === 'image' && caption ? caption.match(new RegExp(cmds, 'gi')) : ''
@@ -82,7 +84,7 @@ async function msgHandler (client, message) {
                     + '\n9. #likee / #like url [contoh: #likee https://likee.com/@410100006/video/68405....]'
                     + '\n10. #waifu / #Waifu untuk random waifu kalian'
                     + '\n11. #kucing untuk random pict kucing'
-                    + '\n12. #pokemon / #Pokemon untuk random pokemon kalian'
+                    // + '\n12. #pokemon / #Pokemon untuk random pokemon kalian'
                     + '\n13. #wallpaper untuk random wallpaper'
                     + '\n14. #wallpaperanime untuk random wallpaper anime'
                     + '\n15. #quote random quotes'
@@ -107,7 +109,7 @@ async function msgHandler (client, message) {
                         if (url.match(isUrl)) {
                             await client.sendStickerfromUrl(from, url, {method: 'get'})
                                 .then(r => { if (!r) client.sendText(from, 'Maaf, link yang kamu kirim tidak memuat gambar.') })
-                                .catch(err => console.log('Caught exception: ', err))
+                                // .catch(err => console.log('Caught exception: ', err))
                         } else {
                             client.sendText(from, 'Maaf, link yang kamu kirim tidak valid.')
                         }
@@ -127,20 +129,21 @@ async function msgHandler (client, message) {
                     client.sendText(from, '👋 Hello! BOT AKTIF')
                 break
                 case '#tiktok':
-                    if (args.length == 2) {
-                        const url = args[1]
-                        if (!url.match(isUrl) && !url.includes('tiktok.com')) return client.sendText(from, 'Maaf, link yang kamu kirim tidak valid')
-                        // await client.sendText(from, "*Scraping Metadata...*");
-                        await tiktok(url)
-                            .then((videoMeta) => {
-                                const filename = videoMeta.authorMeta.name + '.mp4'
-                                const caps = `*Metadata:*\nUsername: ${videoMeta.authorMeta.name} \nMusic: ${videoMeta.musicMeta.musicName} \nView: ${videoMeta.playCount.toLocaleString()} \nLike: ${videoMeta.diggCount.toLocaleString()} \nComment: ${videoMeta.commentCount.toLocaleString()} \nShare: ${videoMeta.shareCount.toLocaleString()} \nCaption: ${videoMeta.text.trim() ? videoMeta.text : '-'} \n\nDonasi: kamu dapat membantuku beli cendol dengan menyawer melalui https://saweria.co/donate/yogasakti atau mentrakteer melalui https://trakteer.id/red-emperor \nTerimakasih.`
-                                client.sendFile(from,videoMeta.urlbase64, filename, videoMeta.NoWaterMark ? caps : `⚠ Video tanpa watermark tidak tersedia. \n\n${caps}`)
-                                    .catch(err => console.log('Caught exception: ', err))
-                            }).catch((err) => {
-                                client.sendText(from, 'Gagal mengambil metadata, link yang kamu kirim tidak valid')
-                            });
-                    }
+                    {
+                    if (args.length !== 1) return client.reply(from, 'Maaf, link yang kamu kirim tidak valid', id)
+                    const url = args[0]
+                    if (!url.match(isUrl) && !url.includes('tiktok.com')) return client.reply(from, 'Maaf, link yang kamu kirim tidak valid', id)
+                    await client.sendText(from, '*Scraping Metadata...*')
+                    await tiktok(url)
+                        .then((videoMeta) => {
+                            const filename = videoMeta.authorMeta.name + '.mp4'
+                            const caps = `*Metadata:*\nUsername: ${videoMeta.authorMeta.name} \nMusic: ${videoMeta.musicMeta.musicName} \nView: ${videoMeta.playCount.toLocaleString()} \nLike: ${videoMeta.diggCount.toLocaleString()} \nComment: ${videoMeta.commentCount.toLocaleString()} \nShare: ${videoMeta.shareCount.toLocaleString()} \nCaption: ${videoMeta.text.trim() ? videoMeta.text : '-'} \n\nDonasi: kamu dapat membantuku beli dimsum dengan menyawer melalui https://saweria.co/donate/yogasakti atau mentrakteer melalui https://trakteer.id/red-emperor \nTerimakasih.`
+                            client.sendFileFromUrl(from, videoMeta.url, filename, videoMeta.NoWaterMark ? caps : `⚠ Video tanpa watermark tidak tersedia. \n\n${caps}`, '', { headers: { 'User-Agent': 'okhttp/4.5.0' } })
+                                // .catch(err => console.log('Caught exception: ', err))
+                        }).catch(() => {
+                            client.reply(from, 'Gagal mengambil metadata, link yang kamu kirim tidak valid', id)
+                        })
+                }
                     break
                 case '#ig':
                 case '#instagram':
@@ -155,7 +158,7 @@ async function msgHandler (client, message) {
                                 for (var i = 0; i < videoMeta.length; i++) {
                                     await urlShortener(videoMeta[i].video)
                                         .then((result) => {
-                                            console.log('Shortlink: ' + result)
+                                            // console.log('Shortlink: ' + result)
                                             content.push(`${i+1}. ${result}`)
                                         }).catch((err) => {
                                             client.sendText(from, `Error, ` + err)
@@ -173,29 +176,31 @@ async function msgHandler (client, message) {
                 case '#twitter':
                     if (args.length == 2) {
                         const url = args[1]
-                        if (!url.match(isUrl) && !url.includes('twitter.com') || url.includes('t.co')) return client.sendText(from, 'Maaf, url yang kamu kirim tidak valid')
-                        // await client.sendText(from, "*Scraping Metadata...*");
-                        client.sendText(from, '⏳ Tunggu yaa, sedang proses . . . ⏳')
+                        if (!url.match(isUrl) && !url.includes('twitter.com') || url.includes('t.co')) return client.sendText(from, 'Maaf, url yang kamu kirim tidak valid', id)
+                        // await client.sendText('')
                         twitter(url)
-                            .then(async (videoMeta) => {
-                                try {
-                                    if (videoMeta.type == 'video') {
-                                        const content = videoMeta.variants.filter(x => x.content_type !== 'application/x-mpegURL').sort((a, b) => b.bitrate - a.bitrate)
-                                        const result = await urlShortener(content[0].url)
-                                        console.log('Shortlink: ' + result)
-                                        client.sendFileFromUrl(from, content[0].url, 'TwitterVideo.mp4', `Link Download: ${result} \n\nDonasi: kamu dapat membantuku beli cendol dengan menyawer melalui https://saweria.co/donate/yuzusa atau mentrakteer melalui https://trakteer.id/yuzusaha \nTerimakasih.`)
-                                    } else if (videoMeta.type == 'photo') {
-                                        for (var i = 0; i < videoMeta.variants.length; i++) {
-                                            await client.sendFileFromUrl(from, videoMeta.variants[i], videoMeta.variants[i].split('/media/')[1], '')
-                                        }
-                                    }
-                                } catch (err) {
-                                    client.sendText(from, `Error, ` + err)
+                        .then(async (videoMeta) =>{
+                            try {
+                                const title = videoMeta.response.title
+                                const thumbnail = videoMeta.response.thumbnail
+                                const links = videoMeta.response.links
+                                const shorts = []
+                                for (var i = 0; i < links.length; i++) {
+                                    const shortener = await urlShortener(links[i].url);
+                                    console.log(shortener)
+                                    links[i]['short'] = shortener
+                                    shorts.push(links[i])
                                 }
-                            }).catch((err) => {
-                                console.log(err)
-                                client.sendText(from, `Maaf, link tidak valid atau tidak ada video di link yang kamu kirim`)
-                            });
+                                const link = shorts.map((x) => `${x.reslution} Quality: ${x.short}`)
+                                const caption = `Text: ${title} \nLink Download: \n${link.join('\n')} \n\nDonasi: kamu dapat membantuku beli cendol dengan menyawer melalui https://saweria.co/donate/yuzusa atau mentrakteer melalui https://trakteer.id/yuzusaha \nTerimakasih.`
+                                client.sendFileFromUrl(from,thumbnail, 'videos.jpg', caption )
+                            } catch (err) {
+                                client.sendText(from, `Error,` + err)
+                            }
+                        })
+                        .catch((err) => {
+                            client.sendText(from, `Error, url tidak valid atau tidak memuat video \n\n${err}`)
+                        })
                     }
                     break
                 case '#fb':
@@ -214,7 +219,7 @@ async function msgHandler (client, message) {
                                 const shorts = []
                                 for (var i = 0; i < links.length; i++) {
                                     const shortener = await urlShortener(links[i].url)
-                                    console.log('Shortlink: ' + shortener)
+                                    // console.log('Shortlink: ' + shortener)
                                     links[i]['short'] = shortener
                                     shorts.push(links[i])
                                 }
@@ -262,6 +267,7 @@ async function msgHandler (client, message) {
                     })
                 }
                 break
+                case '#likee' :
                 case '#like' :
                 if (args.length == 2) {
                     const url = args[1]
@@ -346,13 +352,6 @@ async function msgHandler (client, message) {
                     q3 = Math.floor(Math.random() * 900) + 300;
                     client.sendFileFromUrl(from, 'http://placekitten.com/'+q3+'/'+q2, 'kucing.png','Neko');
                 break
-                case '#pokemon':
-                case '#Pokemon':
-                    await client.simulateTyping(from, true)
-                    client.sendText(from, '⏳ Tunggu yaa 👉👈, sedang proses . . . ⏳')
-                    q7 = Math.floor(Math.random() * 890) + 1;
-                    client.sendFileFromUrl(from, 'https://assets.pokemon.com/assets/cms2/img/pokedex/full/'+q7+'.png','Pokemon.png',);
-                break
                 case '#wallpaper':
                     await client.simulateTyping(from, true)
                     client.sendText(from, '⏳ Tunggu yaa 👉👈, sedang proses . . . ⏳')
@@ -365,12 +364,13 @@ async function msgHandler (client, message) {
                     client.sendText(from, covid);
                     break;
                 case '#anime':
-                    if (args.length >=2){
-                        const judulanime = args[1]
-                        const animesearch = await anime(judulanime)
-                        client.sendText(from, animesearch)
-                    }
-                break
+                if (args.length >=2) {
+                    const animename = args[1]
+                    malScraper.getInfoFromName(animename)
+                    const { title, picture, score, synopsis, episodes, aired, rating, status } = await malScraper.getInfoFromName(animename)
+                    await client.sendFileFromUrl(from, `${picture}`, 'Anime.png', '⛩️Title:'+`${title}`+'\n\n🎼️Score:'+`${score}`+'\n\n📙️Status:'+`${status}`+'\n\n🖼️Episodes:'+`${episodes}`+'\n\n✨️Rating:'+`${rating}`+'\n\n🌠️Synopsis:'+`${synopsis}`+'\n\n📆️Aired:'+`${aired}`+'.')
+                }
+                break;
                 case '#quote':
                     const getBijak = await quotes()
                     client.sendText(from, getBijak);
@@ -386,7 +386,7 @@ async function msgHandler (client, message) {
 }
 
 process.on('Something went wrong', function (err) {
-    console.log('Caught exception: ', err);
+    // console.log('Caught exception: ', err);
     });
 
 startServer()
