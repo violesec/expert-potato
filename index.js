@@ -3,7 +3,7 @@ const moment = require('moment')
 const { video } = require('tiktok-scraper')
 const malScraper = require('mal-scraper')
 const color = require("./lib/color")
-const {ytmp3, wallpaperanime, anime, corona, quotes} =  require('./lib/functions')
+const {ytmp3, wallpaperanime, corona, quotes} =  require('./lib/functions')
 const {tiktok, instagram, facebook, youtube, likee,twitter} = require('./lib/dl-video')
 const urlShortener = require('./lib/shortener')
 
@@ -19,7 +19,6 @@ const serverOption = {
         '--disable-setuid-sandbox'
         //If Windows Chrome Headless not run
         // '--disable-extensions'
-        
     ]
 }
 
@@ -59,7 +58,7 @@ async function msgHandler (client, message) {
         const commands = ['#menu', '#help', '#sticker', '#stiker', '#gifsticker', '#giftstiker','#tiktok',
         '#ig','#instagram','#twt','#twitter', '#halo', '#about', '#cek','#ping', '#fb','#facebook','#yt',
         '#youtube','#ytmp3','#waifu','#Waifu','#kucing','#neko','#wallpaper',
-        '#wallpaperanime','#corona','#nhder','#anime','#quote','#likee','#like']
+        '#wallpaperanime','#corona','#nhder','#anime','#quote','#likee','#like','#test']
         const cmds = commands.map(x => x + '\\b').join('|')
         const cmd = type === 'chat' ? body.match(new RegExp(cmds, 'gi')) : type === 'image' && caption ? caption.match(new RegExp(cmds, 'gi')) : ''
         const args = body.trim().split(' ')
@@ -179,30 +178,31 @@ async function msgHandler (client, message) {
                         const url = args[1]
                         if (!url.match(isUrl) && !url.includes('twitter.com') || url.includes('t.co')) return client.sendText(from, 'Maaf, url yang kamu kirim tidak valid', id)
                         // await client.sendText('')
+                        await client.sendText(from, '⏳ Tunggu yaa, sedang proses . . . ⏳')
                         twitter(url)
-                        .then(async (videoMeta) =>{
+                        .then(async (videoMeta) => {
                             try {
                                 const title = videoMeta.response.title
                                 const thumbnail = videoMeta.response.thumbnail
                                 const links = videoMeta.response.links
                                 const shorts = []
                                 for (var i = 0; i < links.length; i++) {
-                                    const shortener = await urlShortener(links[i].url);
-                                    console.log(shortener)
+                                    const shortener = await urlShortener(links[i].url)
+                                    // console.log('Shortlink: ' + shortener)
                                     links[i]['short'] = shortener
                                     shorts.push(links[i])
                                 }
-                                const link = shorts.map((x) => `${x.reslution} Quality: ${x.short}`)
+                                const link = shorts.map((x) => `${x.resolution} Quality: ${x.short}`)
                                 const caption = `Text: ${title} \nLink Download: \n${link.join('\n')} \n\nDonasi: kamu dapat membantuku beli cendol dengan menyawer melalui https://saweria.co/donate/yuzusa atau mentrakteer melalui https://trakteer.id/yuzusaha \nTerimakasih.`
                                 client.sendFileFromUrl(from,thumbnail, 'videos.jpg', caption )
                             } catch (err) {
-                                client.sendText(from, `Error,` + err)
+                                client.sendText(from, `Error, ` + err)
                             }
                         })
-                        .catch((err) => {
-                            client.sendText(from, `Error, url tidak valid atau tidak memuat video \n\n${err}`)
-                        })
-                    }
+                            .catch((err) => {
+                                client.sendText(from, `Error, url tidak valid atau tidak memuat video \n\n${err}`)
+                            })
+                        }
                     break
                 case '#fb':
                 case '#facebook':
@@ -371,6 +371,7 @@ async function msgHandler (client, message) {
                     const { title, picture, score, synopsis, episodes, aired, rating, status } = await malScraper.getInfoFromName(animename)
                     await client.sendFileFromUrl(from, `${picture}`, 'Anime.png', '⛩️Title:'+`${title}`+'\n\n🎼️Score:'+`${score}`+'\n\n📙️Status:'+`${status}`+'\n\n🖼️Episodes:'+`${episodes}`+'\n\n✨️Rating:'+`${rating}`+'\n\n🌠️Synopsis:'+`${synopsis}`+'\n\n📆️Aired:'+`${aired}`+'.')
                 }
+                case '#test':
                 break;
                 case '#quote':
                     const getBijak = await quotes()
